@@ -1631,7 +1631,7 @@
 				CONFIGURATION_BUILD_DIR = bin/Debug;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_DYNAMIC_NO_PIC = NO;
-				INSTALL_PATH = "\"$(HOME)/Applications\"";
+				INSTALL_PATH = "$(HOME)/Applications";
 				PRODUCT_NAME = MyProject;
 			};
 			name = Debug;
@@ -1921,7 +1921,7 @@
 				CONFIGURATION_BUILD_DIR = bin/Debug;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_DYNAMIC_NO_PIC = NO;
-				INSTALL_PATH = "\"$(HOME)/Applications\"";
+				INSTALL_PATH = "$(HOME)/Applications";
 				PRODUCT_NAME = MyProject;
 				WRAPPER_EXTENSION = xyz;
 			};
@@ -1944,7 +1944,7 @@
 				CONFIGURATION_BUILD_DIR = bin/Debug;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_DYNAMIC_NO_PIC = NO;
-				INSTALL_PATH = "\"$(HOME)/Applications\"";
+				INSTALL_PATH = "$(HOME)/Applications";
 				PRODUCT_NAME = MyProject;
 				WRAPPER_EXTENSION = "";
 			};

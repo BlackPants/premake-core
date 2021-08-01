@@ -1287,7 +1287,7 @@
 
 		local installpaths = {
 			ConsoleApp = '/usr/local/bin',
-			WindowedApp = '"$(HOME)/Applications"',
+			WindowedApp = '$(HOME)/Applications',
 			SharedLib = '/usr/local/lib',
 			StaticLib = '/usr/local/lib',
 			OSXBundle = '$(LOCAL_LIBRARY_DIR)/Bundles',
