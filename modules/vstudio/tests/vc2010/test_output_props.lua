@@ -100,8 +100,19 @@
 		]]
 	end
 
+	function suite.outDir_onTargetDirUWP()
+		system "uwp"
+		targetdir "../bin"
+		prepare()
+		test.capture [[
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+	<LinkIncremental>true</LinkIncremental>
+	<OutDir>..\bin\</OutDir>
+		]]
+	end
+
 --
--- The objeccts directory is applied, if specified.
+-- The objects directory is applied, if specified.
 --
 
 	function suite.intDir_onTargetDir()
@@ -143,6 +154,17 @@
 <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
 	<LinkIncremental>true</LinkIncremental>
 	<IgnoreImportLibrary>true</IgnoreImportLibrary>
+		]]
+	end
+
+	function suite.ignoreImportLib_onUWP()
+		system "uwp"
+		kind "SharedLib"
+		prepare()
+		test.capture [[
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+	<LinkIncremental>true</LinkIncremental>
+	<IgnoreImportLibrary>false</IgnoreImportLibrary>
 		]]
 	end
 

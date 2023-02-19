@@ -511,7 +511,7 @@
 			"NoEditAndContinue",   -- DEPRECATED
 			"NoFramePointer",      -- DEPRECATED
 			"NoImplicitLink",
-			"NoImportLib",
+			"NoImportLib",         -- DEPRECATED
 			"NoIncrementalLink",
 			"NoManifest",
 			"NoMinimalRebuild",
@@ -1203,6 +1203,7 @@
 			"linux",
 			"macosx",
 			"solaris",
+			"uwp",
 			"wii",
 			"windows",
 		},
@@ -1849,6 +1850,7 @@
 			{ "linux",    "Linux" },
 			{ "macosx",   "Apple Mac OS X" },
 			{ "solaris",  "Solaris" },
+			{ "uwp",      "Microsoft Universal Windows Platform"},
 			{ "windows",  "Microsoft Windows" },
 		}
 	}
@@ -1876,7 +1878,7 @@
 	if http ~= nil then
 		newoption {
 			trigger = "insecure",
-			description = "forfit SSH certification checks."
+			description = "Forfeit SSH certification checks."
 		}
 	end
 

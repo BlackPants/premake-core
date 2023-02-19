@@ -91,6 +91,7 @@
 	<PrecompiledHeader>NotUsing</PrecompiledHeader>
 	<WarningLevel>Level3</WarningLevel>
 	<Optimization>Disabled</Optimization>
+	<ExternalWarningLevel>Level3</ExternalWarningLevel>
 	<ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
 		]]
 	end
@@ -103,6 +104,33 @@
 	<PrecompiledHeader>NotUsing</PrecompiledHeader>
 	<WarningLevel>Level3</WarningLevel>
 	<Optimization>Disabled</Optimization>
+	<ExternalWarningLevel>Level3</ExternalWarningLevel>
 	<ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+		]]
+	end
+
+	function suite.UseStandardPreprocessorOn()
+		usestandardpreprocessor 'On'
+		prepare()
+		test.capture [[
+<ClCompile>
+	<PrecompiledHeader>NotUsing</PrecompiledHeader>
+	<WarningLevel>Level3</WarningLevel>
+	<Optimization>Disabled</Optimization>
+	<ExternalWarningLevel>Level3</ExternalWarningLevel>
+	<UseStandardPreprocessor>true</UseStandardPreprocessor>
+		]]
+	end
+
+	function suite.UseStandardPreprocessorOff()
+		usestandardpreprocessor 'Off'
+		prepare()
+		test.capture [[
+<ClCompile>
+	<PrecompiledHeader>NotUsing</PrecompiledHeader>
+	<WarningLevel>Level3</WarningLevel>
+	<Optimization>Disabled</Optimization>
+	<ExternalWarningLevel>Level3</ExternalWarningLevel>
+	<UseStandardPreprocessor>false</UseStandardPreprocessor>
 		]]
 	end

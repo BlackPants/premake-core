@@ -135,6 +135,7 @@
 			m.windowsTargetPlatformVersion,
 			m.fastUpToDateCheck,
 			m.toolsVersion,
+			m.appContainerApplication,
 		}
 	end
 
@@ -400,6 +401,7 @@
 			m.externalWarningLevel,
 			m.externalAngleBrackets,
 			m.scanSourceForModuleDependencies,
+			m.useStandardPreprocessor,
 		}
 
 		if cfg.kind == p.STATICLIB then
@@ -1085,6 +1087,28 @@
 	}
 
 ---
+-- Copy group
+---
+
+	m.categories.Copy = {
+		name = "Copy",
+		priority = 13,
+
+		emitFiles = function(prj, group)
+			local fileCfgFunc = {
+				m.excludedFromBuild,
+				m.destinationFolders
+			}
+
+			m.emitFiles(prj, group, "CopyFileToFolders", nil, fileCfgFunc)
+		end,
+
+		emitFilter = function(prj, group)
+			m.filterGroup(prj, group, "CopyFileToFolders")
+		end
+	}
+
+---
 -- Categorize files into groups.
 ---
 	function m.categorizeSources(prj)
@@ -1637,6 +1661,13 @@
 	end
 
 
+	function m.appContainerApplication(prj)
+		if prj.system == p.UWP then
+			m.element("AppContainerApplication", nil, "true")
+		end
+	end
+
+
 	function m.compileAsManaged(fcfg, condition)
 		if fcfg.clr and fcfg ~= p.OFF then
 			m.element("CompileAsManaged", condition, "true")
@@ -1831,6 +1862,13 @@
 			end
 
 			m.element("DebugInformationFormat", nil, value)
+		end
+	end
+
+
+	function m.destinationFolders(filecfg, condition)
+		if filecfg then
+			m.element("DestinationFolders", condition, vstudio.path(filecfg.config, filecfg.config.buildtarget.directory))
 		end
 	end
 
@@ -2064,8 +2102,12 @@
 
 
 	function m.ignoreImportLibrary(cfg)
-		if cfg.kind == p.SHAREDLIB and cfg.flags.NoImportLib then
-			m.element("IgnoreImportLibrary", nil, "true")
+		if cfg.kind == p.SHAREDLIB then
+			if cfg.flags.NoImportLib then
+				m.element("IgnoreImportLibrary", nil, "true")
+			elseif cfg.system == p.UWP then
+				m.element("IgnoreImportLibrary", nil, "false")
+			end
 		end
 	end
 
@@ -2207,7 +2249,7 @@
 	function m.includePath(cfg)
 		local dirs = vstudio.path(cfg, cfg.externalincludedirs)
 		if #dirs > 0 then
-			if _ACTION < "vs2022" then
+			if _ACTION < "vs2019" then
 				m.element("IncludePath", nil, "%s;$(IncludePath)", table.concat(dirs, ";"))
 			else
 				m.element("ExternalIncludePath", nil, "%s;$(ExternalIncludePath)", table.concat(dirs, ";"))
@@ -2777,29 +2819,37 @@
 		end
 
 		local target = cfg or prj
-		local version = project.systemversion(target)
+		local minversion, maxversion = project.systemversion(target)
 
 		-- if this is a config, only emit if different from project
 		if cfg then
-			local prjVersion = project.systemversion(prj)
-			if not prjVersion or version == prjVersion then
+			local prjMinVersion, prjMaxVersion = project.systemversion(prj)
+			if not prjMinVersion or (minversion == prjMinVersion and maxversion == prjMaxVersion) then
 				return
 			end
 		end
 
 		-- See https://developercommunity.visualstudio.com/content/problem/140294/windowstargetplatformversion-makes-it-impossible-t.html
-		if version == "latest" then
+		if minversion == "latest" then
 			if _ACTION == "vs2015" then
-				version = nil   -- SDK v10 is not supported by VS2015
+				minversion = nil   -- SDK v10 is not supported by VS2015
 			elseif _ACTION == "vs2017" then
-				version = "$(LatestTargetPlatformVersion)"
+				minversion = "$(LatestTargetPlatformVersion)"
 			else
-				version = "10.0"
+				minversion = "10.0"
 			end
 		end
 
-		if version then
-			m.element("WindowsTargetPlatformVersion", nil, version)
+		-- Max version is only supported in UWP projects
+		if maxversion == "latest" then
+			maxversion = "10.0"
+		end
+
+		if maxversion and target.system == p.UWP then
+			m.element("WindowsTargetPlatformMinVersion", nil, minversion)
+			m.element("WindowsTargetPlatformVersion", nil, maxversion)
+		elseif minversion then
+			m.element("WindowsTargetPlatformVersion", nil, minversion)
 		end
 	end
 
@@ -2915,7 +2965,7 @@
 
 
 	function m.externalWarningLevel(cfg)
-		if _ACTION >= "vs2022" then
+		if _ACTION >= "vs2019" then
 			local map = { Off = "TurnOffAllWarnings", High = "Level4", Extra = "Level4", Everything = "Level4" }
 			m.element("ExternalWarningLevel", nil, map[cfg.externalwarnings] or "Level3")
 		end
@@ -2923,7 +2973,7 @@
 
 
 	function m.externalWarningLevelFile(cfg, condition)
-		if _ACTION >= "vs2022" then
+		if _ACTION >= "vs2019" then
 			if cfg.externalwarnings then
 				local map = { Off = "TurnOffAllWarnings", High = "Level4", Extra = "Level4", Everything = "Level4" }
 				m.element("ExternalWarningLevel", condition, map[cfg.externalwarnings] or "Level3")
@@ -2933,7 +2983,7 @@
 
 
 	function m.externalAngleBrackets(cfg, condition)
-		if _ACTION >= "vs2022" then
+		if _ACTION >= "vs2019" then
 			if cfg.externalanglebrackets == p.OFF then
 				m.element("TreatAngleIncludeAsExternal", condition, "false")
 			elseif cfg.externalanglebrackets == p.ON then
@@ -2951,6 +3001,16 @@
 				else
 					m.element("ScanSourceForModuleDependencies", nil, "false")
 				end
+			end
+		end
+	end
+
+	function m.useStandardPreprocessor(cfg)
+		if _ACTION >= "vs2019" and cfg.usestandardpreprocessor ~= nil then
+			if cfg.usestandardpreprocessor == 'On' then
+				m.element("UseStandardPreprocessor", nil, "true")
+			else
+				m.element("UseStandardPreprocessor", nil, "false")
 			end
 		end
 	end
