@@ -971,6 +971,15 @@
 		_p(3,'mainGroup = %s /* %s */;', tr.id, tr.name)
 		_p(3,'projectDirPath = "";')
 
+		local knownRegions = tr.project.xcodeknownregions
+		if not table.isempty(knownRegions) then
+			_p(3, 'knownRegions = (')
+			for _, key in ipairs(knownRegions) do
+				_p(4, '%s,', key)
+			end
+			_p(3, ');')
+		end
+
 		if #tr.projects.children > 0 then
 			_p(3,'projectReferences = (')
 			for _, node in ipairs(tr.projects.children) do
