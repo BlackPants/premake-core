@@ -47,6 +47,12 @@
 	}
 
 	p.api.register {
+		name = "xcodeknownregions",
+		scope = "project",
+		kind = "list:string",
+	}
+
+	p.api.register {
 		name = "iosfamily",
 		scope = "config",
 		kind = "string",
