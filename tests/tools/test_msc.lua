@@ -308,6 +308,23 @@
 		test.contains("/external:I/usr/local/include", msc.getincludedirs(cfg, cfg.includedirs, cfg.externalincludedirs))
 	end
 
+--
+-- Check handling includedirsafter.
+--
+
+function suite.cflags_onIncludeDirsAfter()
+	includedirsafter { "/usr/local/include" }
+	prepare()
+	test.contains("-I/usr/local/include", msc.getincludedirs(cfg, cfg.includedirs, cfg.externalincludedirs, cfg.frameworkdirs, cfg.includedirsafter))
+end
+
+function suite.cflags_onVs2022IncludeDirsAfter()
+	p.action.set("vs2022")
+	includedirsafter { "/usr/local/include" }
+	prepare()
+	test.contains("/external:I/usr/local/include", msc.getincludedirs(cfg, cfg.includedirs, cfg.externalincludedirs, cfg.frameworkdirs, cfg.includedirsafter))
+end
+
 
 --
 -- Check handling of library search paths.
@@ -460,6 +477,30 @@
 		test.contains("/fsanitize=fuzzer", msc.getcxxflags(cfg))
 	end
 
+--
+-- Check entrypoint linker options.
+--
+
+	function suite.ldflags_entrypoint_windows()
+		kind "WindowedApp"
+		entrypoint "main2"
+		prepare()
+		test.contains("/SUBSYSTEM:WINDOWS", msc.getldflags(cfg))
+		test.contains("/ENTRY:main2", msc.getldflags(cfg))
+	end
+	function suite.ldflags_entrypoint_console()
+		kind "ConsoleApp"
+		entrypoint "main2"
+		prepare()
+		test.contains("/SUBSYSTEM:CONSOLE", msc.getldflags(cfg))
+		test.contains("/ENTRY:main2", msc.getldflags(cfg))
+	end
+	function suite.ldflags_entrypoint_other()
+		entrypoint "main2"
+		prepare()
+		test.contains("/SUBSYSTEM:NATIVE", msc.getldflags(cfg))
+		test.contains("/ENTRY:main2", msc.getldflags(cfg))
+	end
 
 --
 -- Check handling of additional linker options.

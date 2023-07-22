@@ -71,6 +71,7 @@
 | [docname](docname.md)                                     |  |
 | [editandcontinue](editandcontinue.md)                     |  |
 | [editorintegration](editorintegration.md)                 | Enable or disable IDE integration |
+| [enableunitybuild](enableunitybuild.md)                   |  |
 | [enablewarnings](enablewarnings.md)                       |  |
 | [endian](endian.md)                                       |  |
 | [entrypoint](entrypoint.md)                               | Specify the program entry point function |
@@ -108,6 +109,7 @@
 | [implibsuffix](implibsuffix.md)                           |  |
 | [include](include.md)                                     |  |
 | [includedirs](includedirs.md)                             |  |
+| [includedirsafter](includedirsafter.md)                   |  |
 | [includeexternal](includeexternal.md)                     |  |
 | [inlining](inlining.md)                                   | Tells the compiler when it should inline functions |
 | [intrinsics](intrinsics.md)                               |  |

@@ -645,7 +645,7 @@
 		includedirs { "../include", "src/include" }
 		externalincludedirs { "test/include" }
 		prepare()
-		test.isequal({ '-I../include', '-Isrc/include', '-isystem test/include' }, gcc.getincludedirs(cfg, cfg.includedirs, cfg.externalincludedirs))
+		test.isequal({ '-I../include', '-Isrc/include', '-isystem test/include' }, gcc.getincludedirs(cfg, cfg.includedirs, cfg.externalincludedirs, cfg.frameworkdirs, cfg.includedirsafter))
 	end
 
 
@@ -669,16 +669,25 @@
 		includedirs { "include files" }
 		externalincludedirs { "test include" }
 		prepare()
-		test.isequal({ '-I"include files"', '-isystem "test include"' }, gcc.getincludedirs(cfg, cfg.includedirs, cfg.externalincludedirs))
+		test.isequal({ '-I"include files"', '-isystem "test include"' }, gcc.getincludedirs(cfg, cfg.includedirs, cfg.externalincludedirs, cfg.frameworkdirs, cfg.includedirsafter))
 	end
 
 	function suite.includeDirs_onEnvVars()
 		includedirs { "$(IntDir)/includes" }
 		externalincludedirs { "$(BinDir)/include" }
 		prepare()
-		test.isequal({ '-I"$(IntDir)/includes"', '-isystem "$(BinDir)/include"' }, gcc.getincludedirs(cfg, cfg.includedirs, cfg.externalincludedirs))
+		test.isequal({ '-I"$(IntDir)/includes"', '-isystem "$(BinDir)/include"' }, gcc.getincludedirs(cfg, cfg.includedirs, cfg.externalincludedirs, cfg.frameworkdirs, cfg.includedirsafter))
 	end
 
+--
+-- Include Directories After correctly take idirafter flag
+--
+
+	function suite.includeDirs_includeDirAfter()
+		includedirsafter { "after/path" }
+		prepare()
+		test.isequal({ '-idirafter after/path'}, gcc.getincludedirs(cfg, cfg.includedirs, cfg.externalincludedirs, cfg.frameworkdirs, cfg.includedirsafter))
+	end
 
 
 --
@@ -1098,4 +1107,37 @@
 		prepare()
 		test.excludes({ "-fvisibility-inlines-hidden" }, gcc.getcflags(cfg))
 		test.contains({ "-fvisibility-inlines-hidden" }, gcc.getcxxflags(cfg))
+	end
+
+--
+-- Test compileas.
+--
+
+	function suite.cxxflags_compileasC()
+		compileas "C"
+		prepare()
+		test.contains({ "-x c" }, gcc.getcflags(cfg))
+		test.contains({ "-x c" }, gcc.getcxxflags(cfg))
+	end
+
+	function suite.cxxflags_compileasCPP()
+		compileas "C++"
+		prepare()
+		test.contains({ "-x c++" }, gcc.getcflags(cfg))
+		test.contains({ "-x c++" }, gcc.getcxxflags(cfg))
+	end
+
+	function suite.cxxflags_compileasObjC()
+		compileas "Objective-C"
+		prepare()
+		test.contains({ "-x objective-c" }, gcc.getcflags(cfg))
+		test.contains({ "-x objective-c" }, gcc.getcxxflags(cfg))
+	end
+
+	function suite.cxxflags_compileasObjCPP()
+		compileas "Objective-C++"
+
+		prepare()
+		test.contains({ "-x objective-c++" }, gcc.getcflags(cfg))
+		test.contains({ "-x objective-c++" }, gcc.getcxxflags(cfg))
 	end

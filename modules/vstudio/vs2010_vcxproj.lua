@@ -196,6 +196,7 @@
 				m.clrSupport,
 				m.characterSet,
 				m.platformToolset,
+				m.enableUnityBuild,
 				m.sanitizers,
 				m.toolsVersion,
 				m.wholeProgramOptimization,
@@ -1644,6 +1645,10 @@
 		elseif _ACTION >= "vs2019" and cfg.toolset and cfg.toolset == "clang" then
 			local value = iif(cfg.unsignedchar, "On", "Off")
 			table.insert(opts, p.tools.msc.shared.unsignedchar[value])
+			-- <OpenMPSupport>true</OpenMPSupport> is unfortunately ignored with clang toolset
+			if cfg.openmp == "On" then
+				table.insert(opts, 1, '/openmp')
+			end
 		end
 
 		if #opts > 0 then
@@ -2148,16 +2153,28 @@
 		end
 	end
 
-	local function nuGetTargetsFile(prj, package)
+	local function nuGetTargetsFile(prj, package, extension)
 		local packageAPIInfo = vstudio.nuget2010.packageAPIInfo(prj, package)
-		return p.vstudio.path(prj, p.filename(prj.workspace, string.format("packages\\%s.%s\\build\\native\\%s.targets", vstudio.nuget2010.packageId(package), packageAPIInfo.verbatimVersion or packageAPIInfo.version, vstudio.nuget2010.packageId(package))))
+		if not packageAPIInfo.packageEntries then
+			return nil
+		end
+		for _, entry in ipairs(packageAPIInfo.packageEntries) do
+			if path.getextension(entry) == extension then
+				local packageRootPath = p.filename(prj.workspace, string.format("packages\\%s.%s\\", vstudio.nuget2010.packageId(package), packageAPIInfo.verbatimVersion or packageAPIInfo.version))
+				return p.vstudio.path(prj, path.join(packageRootPath, entry))
+			end
+		end
+
+		return nil
 	end
 
 	function m.importNuGetTargets(prj)
 		if not vstudio.nuget2010.supportsPackageReferences(prj) then
 			for i = 1, #prj.nuget do
-				local targetsFile = nuGetTargetsFile(prj, prj.nuget[i])
-				p.x('<Import Project="%s" Condition="Exists(\'%s\')" />', targetsFile, targetsFile)
+				local targetsFile = nuGetTargetsFile(prj, prj.nuget[i], ".targets")
+				if targetsFile then
+					p.x('<Import Project="%s" Condition="Exists(\'%s\')" />', targetsFile, targetsFile)
+				end
 			end
 		end
 	end
@@ -2178,8 +2195,14 @@
 			p.pop('</PropertyGroup>')
 
 			for i = 1, #prj.nuget do
-				local targetsFile = nuGetTargetsFile(prj, prj.nuget[i])
-				p.x('<Error Condition="!Exists(\'%s\')" Text="$([System.String]::Format(\'$(ErrorText)\', \'%s\'))" />', targetsFile, targetsFile)
+				local propsFile = nuGetTargetsFile(prj, prj.nuget[i], ".props")
+				if propsFile then
+					p.x('<Error Condition="!Exists(\'%s\')" Text="$([System.String]::Format(\'$(ErrorText)\', \'%s\'))" />', propsFile, propsFile)
+				end
+				local targetsFile = nuGetTargetsFile(prj, prj.nuget[i], ".targets")
+				if targetsFile then
+					p.x('<Error Condition="!Exists(\'%s\')" Text="$([System.String]::Format(\'$(ErrorText)\', \'%s\'))" />', targetsFile, targetsFile)
+				end
 			end
 			p.pop('</Target>')
 		end
@@ -2201,6 +2224,7 @@
 		return {
 			m.importGroupSettings,
 			m.importRuleSettings,
+			m.importNuGetProps,
 			m.importBuildCustomizationsProps
 		}
 	end
@@ -2230,6 +2254,17 @@
 		end
 	end
 
+	function m.importNuGetProps(prj)
+		if not vstudio.nuget2010.supportsPackageReferences(prj) then
+			for i = 1, #prj.nuget do
+				local propsFile = nuGetTargetsFile(prj, prj.nuget[i], ".props")
+				if propsFile then
+					p.x('<Import Project="%s" Condition="Exists(\'%s\')" />', propsFile, propsFile)
+				end
+			end
+		end
+	end
+
 
 	function m.importBuildCustomizationsProps(prj)
 		for i, build in ipairs(prj.buildcustomizations) do
@@ -2247,7 +2282,8 @@
 
 
 	function m.includePath(cfg)
-		local dirs = vstudio.path(cfg, cfg.externalincludedirs)
+		local externaldirs = table.join(cfg.externalincludedirs, cfg.includedirsafter)
+		local dirs = vstudio.path(cfg, externaldirs)
 		if #dirs > 0 then
 			if _ACTION < "vs2019" then
 				m.element("IncludePath", nil, "%s;$(IncludePath)", table.concat(dirs, ";"))
@@ -2547,6 +2583,12 @@
 			else
 				m.element("PlatformToolset", nil, version)
 			end
+		end
+	end
+
+	function m.enableUnityBuild(cfg)
+		if _ACTION >= "vs2017" and cfg.enableunitybuild then
+			m.element("EnableUnitySupport", nil, iif(cfg.enableunitybuild == "On", "true", "false"))
 		end
 	end
 
